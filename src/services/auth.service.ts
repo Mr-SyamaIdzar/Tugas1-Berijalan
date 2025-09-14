@@ -1,6 +1,56 @@
-import prisma from "../libs/prisma";
+// import prisma from "../libs/prisma";
 import { hashPassword } from "../utils/password.util";
 import { IGlobalResponse } from "../interfaces/global.interface";
+import { ILoginResponse } from "../interfaces/global.interface";
+import { PrismaClient } from "@prisma/client";
+import bcrypt from "bcrypt";
+import { UGenerateToken } from "../utils/jwt";
+
+const prisma = new PrismaClient();
+
+export const SLogin = async (
+  usernameOrEmail: string,
+  password: string
+): Promise<IGlobalResponse<ILoginResponse>> => {
+  const admin = await prisma.admin.findFirst({
+    where: {
+      OR: [{ username: usernameOrEmail }, { email: usernameOrEmail }],
+      isActive: true,
+      deletedAt: null,
+    },
+  });
+
+  if (!admin) {
+    throw Error("Invalid credentials");
+  }
+
+  const isPasswordValid = await bcrypt.compare(password, admin.password);
+
+  if (!isPasswordValid) {
+    throw Error("Invalid credentials");
+  }
+
+  const token = UGenerateToken({
+    id: admin.id,
+    username: admin.username,
+    email: admin.email,
+    name: admin.name,
+  });
+
+  return {
+    status: true,
+    message: "Login successful",
+    data: {
+      token,
+      admin: {
+        id: admin.id,
+        username: admin.username,
+        email: admin.email,
+        name: admin.name,
+      },
+    },
+  };
+};
 
 type CreatePayload = {
   username: string;
@@ -66,9 +116,8 @@ export const updateAdmin = async (
 export const deleteAdmin = async (
   id: number
 ): Promise<IGlobalResponse<null>> => {
-  await prisma.admin.update({
+  await prisma.admin.delete({
     where: { id },
-    data: { deletedAt: new Date(), isActive: false },
   });
 
   return {
