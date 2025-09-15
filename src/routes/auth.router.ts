@@ -1,9 +1,10 @@
 import { Router } from "express";
 import {
   CLogin,
-  createAdmin,
-  updateAdmin,
-  deleteAdmin,
+  CCreateAdmin,
+  CUpdateAdmin,
+  CDeleteAdmin,
+  CGetAllAdmins
 } from "../controllers/auth.controller";
 import { validateBody, validateParams } from "../middlewares/global.middleware";
 import {
@@ -17,25 +18,23 @@ console.log("Auth router initialized");
 
 router.post("/login", CLogin);
 
-// Create Admin
-router.post("/create", validateBody(createAdminSchema), createAdmin);
+router.post("/create", validateBody(createAdminSchema), CCreateAdmin);
 
-// Update Admin
 router.put(
   "/:id",
   validateParams(idParamsSchema),
   validateBody(updateAdminSchema),
-  updateAdmin
+  CUpdateAdmin
 );
 
-// Delete Admin
-router.delete("/:id", validateParams(idParamsSchema), deleteAdmin);
+router.delete("/:id", validateParams(idParamsSchema), CDeleteAdmin);
 
-console.log("✅ Auth router loaded");
+router.get("/", CGetAllAdmins);
 
 router.get("/ping", (req, res) => {
   console.log("🔥 /ping hit");
   res.status(200).json({ message: "pong" });
 });
+
 
 export default router;

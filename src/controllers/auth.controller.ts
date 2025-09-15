@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from "express";
 import * as AuthService from "../services/auth.service";
-import { SLogin } from "../services/auth.service";
 
 export const CLogin = async (
   req: Request,
@@ -9,7 +8,7 @@ export const CLogin = async (
 ): Promise<void> => {
   try {
     const { username, password } = req.body;
-    const result = await SLogin(username, password);
+    const result = await AuthService.SLogin(username, password);
 
     res.status(200).json(result);
   } catch (error) {
@@ -17,42 +16,55 @@ export const CLogin = async (
   }
 };
 
-export const createAdmin = async (
+export const CCreateAdmin = async (
   req: Request,
   res: Response,
   next: NextFunction
-) => {
+): Promise<void> => {
   try {
-    const result = await AuthService.createAdmin(req.body);
-    res.json(result);
+    const result = await AuthService.SCreateAdmin(req.body);
+    res.status(201).json(result);
   } catch (error) {
     next(error);
   }
 };
 
-export const updateAdmin = async (
+export const CUpdateAdmin = async (
   req: Request,
   res: Response,
   next: NextFunction
-) => {
+): Promise<void> => {
   try {
     const id = parseInt(req.params.id, 10);
-    const result = await AuthService.updateAdmin(id, req.body);
+    const result = await AuthService.SUpdateAdmin(id, req.body);
     res.status(200).json(result);
   } catch (error) {
     next(error);
   }
 };
 
-export const deleteAdmin = async (
+export const CDeleteAdmin = async (
   req: Request,
   res: Response,
   next: NextFunction
-) => {
+): Promise<void> => {
   try {
     const id = parseInt(req.params.id, 10);
-    const result = await AuthService.deleteAdmin(id);
-    res.json(result);
+    const result = await AuthService.SDeleteAdmin(id);
+    res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const CGetAllAdmins = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const result = await AuthService.SGetAllAdmins();
+    res.status(200).json(result);
   } catch (error) {
     next(error);
   }

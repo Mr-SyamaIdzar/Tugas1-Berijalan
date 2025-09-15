@@ -1,7 +1,9 @@
-// import prisma from "../libs/prisma";
 import { hashPassword } from "../utils/password.util";
-import { IGlobalResponse } from "../interfaces/global.interface";
-import { ILoginResponse } from "../interfaces/global.interface";
+import {
+  IGlobalResponse,
+  ILoginResponse,
+  IAdminResponse,
+} from "../interfaces/global.interface";
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcrypt";
 import { UGenerateToken } from "../utils/jwt";
@@ -52,24 +54,16 @@ export const SLogin = async (
   };
 };
 
-type CreatePayload = {
-  username: string;
-  password: string;
-  email: string;
-  name: string;
-};
-type UpdatePayload = Partial<CreatePayload>;
-
-export const createAdmin = async (
-  payload: CreatePayload
-): Promise<IGlobalResponse<any>> => {
+export const SCreateAdmin = async (
+  payload: any
+): Promise<IGlobalResponse<IAdminResponse>> => {
   const existing = await prisma.admin.findFirst({
     where: {
       OR: [{ username: payload.username }, { email: payload.email }],
     },
   });
 
-  if (existing) throw new Error("Username or email alredy used");
+  if (existing) throw new Error("Username or email already used");
 
   const passwordHash = await hashPassword(payload.password);
 
@@ -80,20 +74,28 @@ export const createAdmin = async (
       password: passwordHash,
       name: payload.name,
     },
-    select: { id: true, username: true, email: true, name: true },
   });
 
   return {
     status: true,
-    message: "Admin created",
-    data: admin,
+    message: "Admin created successfully",
+    data: {
+      id: admin.id,
+      username: admin.username,
+      email: admin.email,
+      name: admin.name,
+      isActive: admin.isActive,
+      createdAt: admin.createdAt,
+      updateAt: admin.updateAt,
+    },
   };
 };
 
-export const updateAdmin = async (
+// UPDATE ADMIN (DIUBAH)
+export const SUpdateAdmin = async (
   id: number,
-  payload: UpdatePayload
-): Promise<IGlobalResponse<any>> => {
+  payload: any
+): Promise<IGlobalResponse<IAdminResponse>> => {
   const data: any = { ...payload };
 
   if (payload.password) {
@@ -103,17 +105,24 @@ export const updateAdmin = async (
   const admin = await prisma.admin.update({
     where: { id },
     data,
-    select: { id: true, username: true, email: true, name: true },
   });
 
   return {
     status: true,
-    message: "Admin updated",
-    data: admin,
+    message: "Admin updated successfully",
+    data: {
+      id: admin.id,
+      username: admin.username,
+      email: admin.email,
+      name: admin.name,
+      isActive: admin.isActive,
+      createdAt: admin.createdAt,
+      updateAt: admin.updateAt,
+    },
   };
 };
 
-export const deleteAdmin = async (
+export const SDeleteAdmin = async (
   id: number
 ): Promise<IGlobalResponse<null>> => {
   await prisma.admin.delete({
@@ -122,6 +131,34 @@ export const deleteAdmin = async (
 
   return {
     status: true,
-    message: "Admin deleted",
+    message: "Admin deleted successfully",
+    data: null,
+  };
+};
+
+// GET ALL ADMINS (TIDAK DIUBAH)
+export const SGetAllAdmins = async (): Promise<IGlobalResponse> => {
+  const admins = await prisma.admin.findMany({
+    where: {
+      deletedAt: null,
+    },
+    select: {
+      id: true,
+      username: true,
+      email: true,
+      name: true,
+      isActive: true,
+      createdAt: true,
+      updateAt: true,
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+
+  return {
+    status: true,
+    message: "Admins retrieved successfully",
+    data: admins,
   };
 };

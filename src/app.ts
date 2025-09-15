@@ -1,11 +1,15 @@
-import express from "express";
+import express, { Express } from "express";
 import authRouter from "./routes/auth.router";
 import { MErrorHandler } from "./middlewares/error.middleware";
+import cors from "cors";
+import dotenv from "dotenv";
+import { connectRedis } from "./configs/redis.config";
 
 const app = express();
 app.use(express.json());
 
 app.get("/", (req, res) => res.send("Yatta"));
+connectRedis();
 
 // Mount router
 console.log("Auth content:", authRouter);

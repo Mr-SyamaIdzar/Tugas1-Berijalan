@@ -30,4 +30,14 @@ export interface ILoginResponse {
   };
 }
 
+export interface IAdminResponse {
+  id: number;
+  username: string;
+  email: string;
+  name: string;
+  isActive: boolean;
+  createdAt: Date;
+  updateAt: Date;
+}
+
 export type TGlobalResponse<T = unknown> = IGlobalResponse<T>;
