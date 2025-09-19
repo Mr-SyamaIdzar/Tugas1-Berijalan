@@ -16,28 +16,6 @@ export interface IPagination {
 export interface IErrorDetail {
   message: string;
   field?: string;
-  name?: string;
-  detail?: string;
-}
-
-export interface ILoginResponse {
-  token: string;
-  admin: {
-    id: number;
-    username: string;
-    email: string;
-    name: string;
-  };
-}
-
-export interface IAdminResponse {
-  id: number;
-  username: string;
-  email: string;
-  name: string;
-  isActive: boolean;
-  createdAt: Date;
-  updateAt: Date;
 }
 
 export type TGlobalResponse<T = unknown> = IGlobalResponse<T>;

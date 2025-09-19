@@ -1,5 +1,11 @@
 import { Request, Response, NextFunction } from "express";
-import * as AuthService from "../services/auth.service";
+import {
+  SLogin,
+  SCreateAdmin,
+  SUpdateAdmin,
+  SDeleteAdmin,
+  SGetAllAdmins,
+} from "../services/auth.service";
 
 export const CLogin = async (
   req: Request,
@@ -8,7 +14,7 @@ export const CLogin = async (
 ): Promise<void> => {
   try {
     const { username, password } = req.body;
-    const result = await AuthService.SLogin(username, password);
+    const result = await SLogin(username, password);
 
     res.status(200).json(result);
   } catch (error) {
@@ -22,7 +28,8 @@ export const CCreateAdmin = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const result = await AuthService.SCreateAdmin(req.body);
+    const { username, password, email, name } = req.body;
+    const result = await SCreateAdmin(username, email, name, password);
     res.status(201).json(result);
   } catch (error) {
     next(error);
@@ -35,8 +42,10 @@ export const CUpdateAdmin = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const id = parseInt(req.params.id, 10);
-    const result = await AuthService.SUpdateAdmin(id, req.body);
+    const id = parseInt(req.params.id);
+    const { username, password, email, name } = req.body;
+    const result = await SUpdateAdmin(id, username, email, name, password);
+
     res.status(200).json(result);
   } catch (error) {
     next(error);
@@ -49,8 +58,9 @@ export const CDeleteAdmin = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const id = parseInt(req.params.id, 10);
-    const result = await AuthService.SDeleteAdmin(id);
+    const id = parseInt(req.params.id);
+    const result = await SDeleteAdmin(id);
+
     res.status(200).json(result);
   } catch (error) {
     next(error);
@@ -63,7 +73,8 @@ export const CGetAllAdmins = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const result = await AuthService.SGetAllAdmins();
+    const result = await SGetAllAdmins();
+    
     res.status(200).json(result);
   } catch (error) {
     next(error);

@@ -1,8 +1,10 @@
 import { Request } from "express";
 
-export interface CacheOptions {
+export type methods = "GET" | "POST" | "PUT" | "DELETE";
+
+export interface ICacheOptions {
   ttl?: number;
   keyPrefix?: string;
   skipCacheIf?: (req: Request) => boolean;
-  invalidateOnMethods?: string[];
+  invalidateOnMethods?: methods[];
 }

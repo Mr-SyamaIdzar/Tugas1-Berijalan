@@ -1,20 +1,18 @@
 import { Request, Response, NextFunction } from "express";
 import { redisClient } from "../configs/redis.config";
 import crypto from "crypto";
-import { CacheOptions } from "../interfaces/cache.interface";
+import { ICacheOptions, methods } from "../interfaces/cache.interface";
 
-export const MCache = (options: CacheOptions = {}) => {
-  const {
-    ttl = 300,
-    keyPrefix = "api_cache",
-    skipCacheIf,
-    invalidateOnMethods = ["POST", "PUT", "DELETE", "PATCH"],
-  } = options;
-
+export const MCache = ({
+  ttl = 300,
+  keyPrefix = "api_cache",
+  skipCacheIf,
+  invalidateOnMethods = ["POST", "PUT", "DELETE"],
+}: ICacheOptions) => {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
       // Logic untuk menyimpan dan memanipulasi data yang di cache
-      if (invalidateOnMethods.includes(req.method)) {
+      if (invalidateOnMethods.includes(req.method as methods)) {
         return next();
       }
 
@@ -138,22 +136,22 @@ const invalidateCachePatterns = async (patterns: string[]): Promise<void> => {
 };
 
 export const CachePresets = {
-  short: (ttl: number = 60): CacheOptions => ({
+  short: (ttl: number = 60): ICacheOptions => ({
     ttl,
     keyPrefix: "short_cache",
   }),
 
-  medium: (ttl: number = 300): CacheOptions => ({
+  medium: (ttl: number = 300): ICacheOptions => ({
     ttl,
     keyPrefix: "medium_cache",
   }),
 
-  long: (ttl: number = 3600): CacheOptions => ({
+  long: (ttl: number = 3600): ICacheOptions => ({
     ttl,
     keyPrefix: "long_cache",
   }),
 
-  user: (ttl: number = 600): CacheOptions => ({
+  user: (ttl: number = 600): ICacheOptions => ({
     ttl,
     keyPrefix: "user_cache",
     // skipCacheIf: (req) => !req.admin,

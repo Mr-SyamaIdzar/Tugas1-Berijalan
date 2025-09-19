@@ -1,12 +1,7 @@
-import { hashPassword } from "../utils/password.util";
-import {
-  IGlobalResponse,
-  ILoginResponse,
-  IAdminResponse,
-} from "../interfaces/global.interface";
 import { PrismaClient } from "@prisma/client";
+import { IGlobalResponse } from "../interfaces/global.interface";
 import bcrypt from "bcrypt";
-import { UGenerateToken } from "../utils/jwt";
+import { ILoginResponse } from "../interfaces/auth.interface";
 
 const prisma = new PrismaClient();
 
@@ -32,18 +27,10 @@ export const SLogin = async (
     throw Error("Invalid credentials");
   }
 
-  const token = UGenerateToken({
-    id: admin.id,
-    username: admin.username,
-    email: admin.email,
-    name: admin.name,
-  });
-
   return {
     status: true,
     message: "Login successful",
     data: {
-      token,
       admin: {
         id: admin.id,
         username: admin.username,
@@ -55,24 +42,46 @@ export const SLogin = async (
 };
 
 export const SCreateAdmin = async (
-  payload: any
-): Promise<IGlobalResponse<IAdminResponse>> => {
-  const existing = await prisma.admin.findFirst({
+  username: string,
+  email: string,
+  name: string,
+  password: string
+): Promise<IGlobalResponse> => {
+  const existingUsername = await prisma.admin.findFirst({
     where: {
-      OR: [{ username: payload.username }, { email: payload.email }],
+      username,
+      deletedAt: null,
     },
   });
 
-  if (existing) throw new Error("Username or email already used");
+  if (existingUsername) throw new Error("Username already used");
 
-  const passwordHash = await hashPassword(payload.password);
+  const existingEmail = await prisma.admin.findFirst({
+    where: {
+      email,
+      deletedAt: null,
+    },
+  });
+
+  if (existingEmail) throw new Error("Email already used");
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    throw Error("Invalid email format");
+  }
+
+  if (password.length < 8) {
+    throw Error("Password must be at least 8 characters long");
+  }
+
+  const hashedPassword = await bcrypt.hash(password, 10);
 
   const admin = await prisma.admin.create({
     data: {
-      username: payload.username,
-      email: payload.email,
-      password: passwordHash,
-      name: payload.name,
+      username,
+      email,
+      password,
+      name,
     },
   });
 
@@ -85,8 +94,6 @@ export const SCreateAdmin = async (
       email: admin.email,
       name: admin.name,
       isActive: admin.isActive,
-      createdAt: admin.createdAt,
-      updateAt: admin.updateAt,
     },
   };
 };
@@ -94,17 +101,72 @@ export const SCreateAdmin = async (
 // UPDATE ADMIN (DIUBAH)
 export const SUpdateAdmin = async (
   id: number,
-  payload: any
-): Promise<IGlobalResponse<IAdminResponse>> => {
-  const data: any = { ...payload };
+  username?: string,
+  email?: string,
+  name?: string,
+  password?: string,
+  isActive?: boolean
+): Promise<IGlobalResponse> => {
+  const admin = await prisma.admin.findFirst({
+    where: {
+      id,
+      deletedAt: null,
+    },
+  });
 
-  if (payload.password) {
-    data.password = await hashPassword(payload.password);
+  if (!admin) throw Error("Admin not found");
+
+  if (username && username !== admin.username) {
+    const existingUsername = await prisma.admin.findFirst({
+      where: {
+        username,
+        deletedAt: null,
+        NOT: { id },
+      },
+    });
+    if (existingUsername) {
+      throw Error("Username already exists");
+    }
   }
 
-  const admin = await prisma.admin.update({
+  if (email && email !== admin.email) {
+    const existingEmail = await prisma.admin.findFirst({
+      where: {
+        email,
+        deletedAt: null,
+        NOT: { id },
+      },
+    });
+    if (existingEmail) {
+      throw Error("Email already exists");
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      throw Error("Invalid email format");
+    }
+  }
+
+  if (password && password.length < 8) {
+    throw Error("Password must be at least 8 characters long");
+  }
+
+  const updateData: any = {
+    updatedAt: new Date(),
+  };
+
+  if (username !== undefined) updateData.username = username;
+  if (email !== undefined) updateData.email = email;
+  if (name !== undefined) updateData.name = name;
+  if (isActive !== undefined) updateData.isActive = isActive;
+
+  if (password) {
+    updateData.password = await bcrypt.hash(password, 10);
+  }
+
+  const updatedAdmin = await prisma.admin.update({
     where: { id },
-    data,
+    data: updateData,
   });
 
   return {
@@ -116,23 +178,32 @@ export const SUpdateAdmin = async (
       email: admin.email,
       name: admin.name,
       isActive: admin.isActive,
-      createdAt: admin.createdAt,
-      updateAt: admin.updateAt,
     },
   };
 };
 
-export const SDeleteAdmin = async (
-  id: number
-): Promise<IGlobalResponse<null>> => {
-  await prisma.admin.delete({
+export const SDeleteAdmin = async (id: number): Promise<IGlobalResponse> => {
+  const admin = await prisma.admin.delete({
+    where: {
+      id,
+      deletedAt: null,
+    },
+  });
+
+  if (!admin) throw Error("Admin not found");
+
+  await prisma.admin.update({
     where: { id },
+    data: {
+      deletedAt: new Date(),
+      isActive: false,
+      updateAt: new Date(),
+    },
   });
 
   return {
     status: true,
     message: "Admin deleted successfully",
-    data: null,
   };
 };
 

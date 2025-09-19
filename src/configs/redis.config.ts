@@ -2,21 +2,19 @@ import { createClient } from "redis";
 
 const REDIS_URL = process.env.REDIS_URL || "redis://localhost:6379";
 
-const redisClient = createClient({
+export const redisClient = createClient({
   url: REDIS_URL,
 });
 
 redisClient.on("error", (err) => {
-  console.error("Redis Client Error:", err);
+  console.error("Redis client error:", err);
 });
 
-const connectRedis = async (): Promise<void> => {
-  await redisClient.connect();
-  console.log("Redis connected successfully");
-};
-
-export { redisClient, connectRedis };
-
-export const publishQueueUpdate = async (data: any): Promise<void> => {
-  await redisClient.publish("queue_update", JSON.stringify(data));
+export const connectRedis = async (): Promise<void> => {
+  try {
+    await redisClient.connect();
+    console.log("Redis connected successfully");
+  } catch (error) {
+    console.error("Failed to connect redis: ", error);
+  }
 };

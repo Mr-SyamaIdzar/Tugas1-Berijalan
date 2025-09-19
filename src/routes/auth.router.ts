@@ -6,7 +6,7 @@ import {
   CDeleteAdmin,
   CGetAllAdmins
 } from "../controllers/auth.controller";
-import { validateBody, validateParams } from "../middlewares/global.middleware";
+import { validateBody, validateParams } from "../middlewares/validate.middleware";
 import {
   createAdminSchema,
   updateAdminSchema,
