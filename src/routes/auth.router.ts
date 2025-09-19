@@ -4,37 +4,40 @@ import {
   CCreateAdmin,
   CUpdateAdmin,
   CDeleteAdmin,
-  CGetAllAdmins
+  CGetAllAdmins,
 } from "../controllers/auth.controller";
-import { validateBody, validateParams } from "../middlewares/validate.middleware";
 import {
-  createAdminSchema,
-  updateAdminSchema,
-  idParamsSchema,
-} from "../schemas/auth.schema";
+  CachePresets,
+  MCache,
+  MInvalidateCache,
+} from "../middlewares/cache.middleware";
+import { MAuthValidate } from "../middlewares/auth.middleware";
 
 const router = Router();
-console.log("Auth router initialized");
 
 router.post("/login", CLogin);
 
-router.post("/create", validateBody(createAdminSchema), CCreateAdmin);
+router.post(
+  "/create",
+  MInvalidateCache(["medium_cache:*"]),
+  MAuthValidate,
+  CCreateAdmin
+);
 
 router.put(
   "/:id",
-  validateParams(idParamsSchema),
-  validateBody(updateAdminSchema),
+  MInvalidateCache(["medium_cache:*"]),
+  MAuthValidate,
   CUpdateAdmin
 );
 
-router.delete("/:id", validateParams(idParamsSchema), CDeleteAdmin);
+router.delete(
+  "/:id",
+  MInvalidateCache(["medium_cache:*"]),
+  MAuthValidate,
+  CDeleteAdmin
+);
 
-router.get("/", CGetAllAdmins);
-
-router.get("/ping", (req, res) => {
-  console.log("🔥 /ping hit");
-  res.status(200).json({ message: "pong" });
-});
-
+router.get("/", MCache(CachePresets.medium(300)), MAuthValidate, CGetAllAdmins);
 
 export default router;

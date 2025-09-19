@@ -1,9 +1,9 @@
-import { NextFunction, Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import { SClaimQueue, SNextQueue } from "../services/queue.service";
 
-export const CClaimQueue = async (
-  res: Response,
+export const CClaimedQueue = async (
   req: Request,
+  res: Response,
   next: NextFunction
 ): Promise<void> => {
   try {
@@ -16,8 +16,8 @@ export const CClaimQueue = async (
 };
 
 export const CNextQueue = async (
-  res: Response,
   req: Request,
+  res: Response,
   next: NextFunction
 ): Promise<void> => {
   try {
